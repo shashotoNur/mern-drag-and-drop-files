@@ -2,10 +2,10 @@
   "name": "server",
   "version": "1.0.0",
   "description": "Express server to handle upload & download",
-  "main": "server.js",
+  "main": "src/server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "server": "nodemon server.js"
+    "server": "nodemon src/server.js"
   },
   "repository": {
     "type": "git",

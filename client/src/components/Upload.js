@@ -1,37 +1,38 @@
 import React, { useState, useRef } from 'react';
 import { useHistory } from "react-router-dom";
 import Dropzone from 'react-dropzone';
-import axios from 'axios';
 import { Form, Row, Col, Button } from 'react-bootstrap';
 
-const API_URL = 'http://localhost:5000';
+// utils
+import uploadFileFn from "../utils/uploadFile";
 
 const Upload = () =>
 {
   const [file, setFile] = useState(null);
   const [previewSrc, setPreviewSrc] = useState('');
-  const [state, setState] = useState({ title: '', description: '' });
+  const [fileData, setFileData] = useState({ title: '', description: '' });
   const [errorMsg, setErrorMsg] = useState('');
   const [isPreviewAvailable, setIsPreviewAvailable] = useState(false);
 
   const history = useHistory();
   const dropRef = useRef();
 
-  const handleInputChange = (event) => { setState({ ...state, [event.target.name]: event.target.value }); };
+  const handleInputChange = (event) => { setFileData({ ...fileData, [event.target.name]: event.target.value }); };
 
   const onDrop = (files) =>
   {
     const [uploadedFile] = files;
     setFile(uploadedFile);
 
+    const fileData = { title: uploadedFile.name.replace(/[^.]*$/,""), description: '' };
+    setFileData(fileData);
+
     const fileReader = new FileReader();
-    fileReader.onload = () => {
-      setPreviewSrc(fileReader.result);
-    };
 
+    fileReader.onload = () => setPreviewSrc(fileReader.result);
     fileReader.readAsDataURL(uploadedFile);
-
     setIsPreviewAvailable(uploadedFile.name.match(/\.(jpeg|jpg|png)$/));
+
     dropRef.current.style.border = '2px dashed #e9ebeb';
   };
 
@@ -44,32 +45,12 @@ const Upload = () =>
   const handleOnSubmit = async (event) =>
   {
     event.preventDefault();
+    setErrorMsg('');
 
-    try
-    {
-      const { title, description } = state;
-      if (title.trim() !== '' && description.trim() !== '')
-      {
-        if (file)
-        {
-          const formData = new FormData();
-          formData.append('file', file);
-          formData.append('title', title);
-          formData.append('description', description);
+    const result = await uploadFileFn(fileData, file);
 
-          setErrorMsg('');
-
-          await axios.post(`${API_URL}/upload`, formData, {
-            headers: { 'Content-Type': 'multipart/form-data' }
-          });
-          history.push('/files');
-        }
-        else setErrorMsg('Please select a file to add.');
-      }
-      else setErrorMsg('Please enter all the field values.');
-
-    }
-    catch (error) { error.response && setErrorMsg(error.response.data); };
+    if(result?.error) setErrorMsg(result?.error)
+    else history.push('/files');
   };
 
   return (
@@ -80,7 +61,7 @@ const Upload = () =>
         <Row>
           <Col>
             <Form.Group controlId="title">
-              <Form.Control type="text" name="title" value={state.title || ''}
+              <Form.Control type="text" name="title" value={fileData.title || ''}
                 placeholder="Enter title" onChange={ handleInputChange } />
             </Form.Group>
           </Col>
@@ -89,7 +70,7 @@ const Upload = () =>
         <Row>
           <Col>
             <Form.Group controlId="description">
-              <Form.Control type="text" name="description" value={state.description || ''}
+              <Form.Control type="text" name="description" value={fileData.description || ''}
                 placeholder="Enter description" onChange={handleInputChange} />
             </Form.Group>
           </Col>

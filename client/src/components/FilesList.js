@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import download from 'downloadjs';
 import axios from 'axios';
+
+//utils
+import downloadFile from '../utils/downloadFile'; 
 
 const API_URL = 'http://localhost:5000';
 
@@ -25,24 +27,17 @@ const FilesList = () =>
     fetchFileData();
   }, []);
 
-  const downloadFile = async (id, path, mimetype) =>
+  const startDownload = (_id, file_path, file_mimetype) =>
   {
-    try
-    {
-      const result = await axios.get(`${API_URL}/download/${id}`,
-                                            { responseType: 'blob' });
-      const split = path.split('/');
-      const filename = split[split.length - 1];
-      setErrorMsg('');
+    setErrorMsg('');
 
-      return download(result.data, filename, mimetype);
-    }
-    catch (error)
-    {
-      if (error.response && error.response.status === 400)
-        setErrorMsg('Error while downloading file. Try again later');
-    };
+    const result = downloadFile(_id, file_path, file_mimetype);
+
+    if(result?.error) setErrorMsg(result?.error);
+    else return result;
   };
+
+  
 
   return (
     <div className="files-container">
@@ -68,9 +63,7 @@ const FilesList = () =>
                   <td className="file-description">{description}</td>
 
                   <td>
-                    <a href="#/" onClick={() => downloadFile(_id, file_path, file_mimetype) } >
-                      Download
-                    </a>
+                    <input type="button" value="Download" onClick={ () => startDownload(_id, file_path, file_mimetype) } />
                   </td>
 
                 </tr>

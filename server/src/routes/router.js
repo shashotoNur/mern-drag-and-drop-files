@@ -1,7 +1,7 @@
 
 const Router = require('express').Router();
 
-const upload = require('../middleware/upload');
+const upload = require('../middlewares/upload');
 const { saveFileData, getAllFiles, downloadAFile } = require('../controllers/filesControllers');
 
 Router.post( '/upload', upload.single('file'), saveFileData,
